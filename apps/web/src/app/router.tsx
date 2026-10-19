@@ -21,6 +21,7 @@ const getRouter = (): AppRouter => {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    defaultViewTransition: true,
   });
   setupRouterSsrQueryIntegration({ router, queryClient });
   return router;
