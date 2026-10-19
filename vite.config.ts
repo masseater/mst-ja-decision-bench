@@ -198,7 +198,7 @@ export default defineConfig({
       },
     ],
     settings: {
-      [decisionPluginName]: { model: "openrouter/perplexity/pplx-decider-v1.1-27b" },
+      [decisionPluginName]: { model: "openrouter/typesafe/jev-1.14" },
     },
     options: {
       typeAware: true,
