@@ -12,7 +12,7 @@ const PageShell = ({
   header,
   children,
 }: Readonly<{ header: ReactNode; children: ReactNode }>): ReactNode => (
-  <main className="mx-auto flex max-w-4xl flex-col gap-12 px-4 py-8 sm:px-8">
+  <main className="vt-match mx-auto flex max-w-4xl flex-col gap-12 px-4 py-8 sm:px-8">
     <header className="flex flex-col gap-3">
       <TaskNav />
       {header}
