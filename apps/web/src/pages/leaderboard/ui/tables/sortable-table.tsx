@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import { sortRows, useSort } from "#/pages/leaderboard/model/sorting";
@@ -39,15 +40,18 @@ const SortableTable = <Row,>({
         <SortHeaderRow table={id} label={label} columns={columns} />
       </TableHeader>
       <TableBody>
-        {sorted.map((row) => (
-          <SortBodyRow
-            key={keyOf(row)}
-            row={row}
-            label={labelOf(row)}
-            color={colorOf(row)}
-            columns={columns}
-          />
-        ))}
+        {pipe(
+          sorted,
+          Arr.map((row) => (
+            <SortBodyRow
+              key={keyOf(row)}
+              row={row}
+              label={labelOf(row)}
+              color={colorOf(row)}
+              columns={columns}
+            />
+          )),
+        )}
       </TableBody>
     </Table>
   );

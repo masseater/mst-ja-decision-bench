@@ -22,7 +22,7 @@ catalog:
   eslint-plugin-drizzle: 0.2.3
   eslint-plugin-react-hooks: 7.1.1
   syncpack: 15.3.3
-  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
   "@r_masseater/oxlint-plugin-decision": 0.0.4
   "@eslint/config-helpers": 0.7.0
   eslint-plugin-no-comments: 1.2.1
@@ -49,7 +49,7 @@ catalogs:
   stack:
     "@distilled.cloud/cloudflare": 1.0.0-rc.13
     "@effect/atom-react": 4.0.2
-    "@effect/tsgo": 0.51.1
+    "@effect/tsgo": 0.56.0
     "@elysiajs/eden": 1.4.9
     "@openfeature/server-sdk": 1.23.0
     "@tanstack/react-query": 5.104.1
@@ -61,14 +61,14 @@ catalogs:
     eden-tanstack-react-query: 0.5.0
     effect: 4.0.2
     elysia: 1.4.30
-    fallow: 3.32.0
+    fallow: 3.35.0
     radix-ui: 1.7.0
     renovate: 44.148.3
     steiger: 0.7.0
     tailwindcss: 4.3.3
     textlint: 15.8.0
     typescript: 7.0.2
-    vite-plus: 1.1.0
+    vite-plus: 1.3.0
 overrides:
   effect: "catalog:stack"
   "@effect/platform-node-shared": 4.0.2
@@ -85,6 +85,14 @@ overrides:
   shell-quote@>=1.8.4 <1.11.0: ^1.11.0
   source-map-js@>=1.0.0 <1.2.2: ^1.2.2
   valibot@<=1.4.1: ^1.4.2
+  "@modelcontextprotocol/server@>=2.0.0 <2.3.0": ^2.3.0
+  "@vitest/browser@>=5.0.0-beta.6 <5.0.5": ^5.0.5
+  "@vitest/ui@>=5.0.0-beta.6 <5.0.5": ^5.0.5
+  fast-uri@>=3.0.0 <3.1.9: ^3.1.9
+  launch-editor@<=2.14.1: ^2.14.2
+  markdown-it@>=15.0.0 <15.0.3: ^15.0.3
+  undici@>=8.0.0 <8.12.2: ^8.12.2
+  zod@>=4.0.0 <4.6.6: ^4.6.6
 peerDependencyRules:
   allowAny:
     - vite
@@ -109,3 +117,4 @@ auditConfig:
   ignoreGhsas:
     - GHSA-vfj7-8cjw-p6xm
     - GHSA-hp3w-g68c-fv3c
+    - GHSA-mrhx-c7xc-m3w5

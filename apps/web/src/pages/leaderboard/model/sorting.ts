@@ -1,5 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Array, Order } from "effect";
+import { Array, Order, pipe } from "effect";
 import { Atom } from "effect/reactivity";
 
 type SortDirection = "asc" | "desc" | "none";
@@ -63,9 +63,11 @@ const orderOf = <Row>({
     return Order.mapInput(Order.String, labelOf);
   }
   return Order.combineAll(
-    columns
-      .filter(({ id }) => id === column)
-      .map(({ sortValue }) => Order.mapInput(Order.Number, sortValue)),
+    pipe(
+      columns,
+      Array.filter(({ id }) => id === column),
+      Array.map(({ sortValue }) => Order.mapInput(Order.Number, sortValue)),
+    ),
   );
 };
 

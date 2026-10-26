@@ -1,11 +1,18 @@
-import { LabelStatsSchema } from "bench-summary/schema";
-import { Config, Effect, Number as Num, Schema } from "effect";
+import {
+  Config,
+  Effect,
+  Number as Num,
+  Schema,
+  Array as Arr,
+  pipe,
+  String as Str,
+  Order,
+} from "effect";
 
-import { ItemSchema } from "./item.ts";
 import type { ChoiceItem } from "./item.ts";
-import { askThrice, splitOf, tally } from "./label.ts";
+import { askThrice, splitOf, tally, writeLabeled } from "./label.ts";
 import { runBench } from "./runtime.ts";
-import { dataPath, readJsonl, sha256, writeJson, writeJsonl } from "./store.ts";
+import { readJsonl, sha256 } from "./store.ts";
 
 const TASK = "jnli";
 const OPUS_SAMPLE = 200;
@@ -57,9 +64,11 @@ const orderRows = Effect.fn("orderRows")(function* orderRows(rows: readonly Jnli
     (row) => sha256(row.sentence_pair_id).pipe(Effect.map((order) => ({ row, order }))),
     { concurrency: "unbounded" },
   );
-  return keyed
-    .toSorted((left, right) => left.order.localeCompare(right.order))
-    .map(({ row }) => row);
+  return pipe(
+    keyed,
+    Arr.sortBy(Order.mapInput(Str.Order, ({ order }: Readonly<{ order: string }>) => order)),
+    Arr.map(({ row }) => row),
+  );
 });
 
 runBench(
@@ -71,16 +80,26 @@ runBench(
       concurrency: LABEL_CONCURRENCY,
     });
     const items = [
-      ...labeled.map(({ item }) => item),
-      ...ordered.slice(OPUS_SAMPLE).map((row) => toItem(row)),
+      ...pipe(
+        labeled,
+        Arr.map(({ item }) => item),
+      ),
+      ...pipe(
+        ordered.slice(OPUS_SAMPLE),
+        Arr.map((row) => toItem(row)),
+      ),
     ];
-    yield* writeJsonl(ItemSchema, yield* dataPath({ task: TASK, extension: "jsonl" }), items);
-    yield* writeJson(LabelStatsSchema, yield* dataPath({ task: TASK, extension: "stats.json" }), {
-      task: TASK,
-      items: items.length,
-      hard: items.filter(({ split }) => split === "hard").length,
-      opusCostUsd: Num.sumAll(labeled.map(({ costUsd }) => costUsd)),
-      opusMatchesHuman: labeled.filter(({ opusMatches }) => opusMatches).length / labeled.length,
+    const costs = pipe(
+      labeled,
+      Arr.map(({ costUsd }) => costUsd),
+    );
+    const matches = pipe(
+      labeled,
+      Arr.filter(({ opusMatches }) => opusMatches),
+    );
+    yield* writeLabeled(TASK, items, {
+      opusCostUsd: Num.sumAll(costs),
+      opusMatchesHuman: matches.length / labeled.length,
       opusSampled: labeled.length,
     });
   }),

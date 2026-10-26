@@ -1,27 +1,17 @@
 import type { TaskResult } from "bench-summary/schema";
-import { Array as Arr, Number as Num, Option, pipe } from "effect";
-import { ConfusionMatrix } from "ml-confusion-matrix";
+import { Array as Arr, Number as Num, Option, pipe, Record as Rec, String as Str } from "effect";
 import seedrandom from "seedrandom";
 import { quantile, sampleWithReplacement } from "simple-statistics";
 
 import { calibrationOf } from "./calibration.ts";
+import { FULL, NONE, balancedAccuracy, macroF1, macroF1Chance, mean } from "./classification.ts";
 import { NOUL_THRESHOLD } from "./item.ts";
 import type { ChoiceItem, Decision, Item, NoulItem, Outcome, Scored, ScoreItem } from "./item.ts";
 
-const NONE = 0;
-const FULL = 1;
 const NOUL_OPTIONS = 2;
 const P50 = 0.5;
 const P95 = 0.95;
 const LAST_OFFSET = 1;
-const TWO = 2;
-
-const mean = (values: readonly number[]): number => {
-  if (values.length === NONE) {
-    return NONE;
-  }
-  return Num.sumAll(values) / values.length;
-};
 
 const choiceCredit = (item: ChoiceItem, decision: Decision): number =>
   Number(decision.type === "choice" && decision.choice === item.gold);
@@ -58,7 +48,7 @@ const chanceOf = (item: Readonly<Item>): number => {
     return FULL / NOUL_OPTIONS;
   }
   if (item.type === "choice") {
-    return FULL / Object.keys(item.options).length;
+    return FULL / Rec.keys(item.options).length;
   }
   const last = item.options.length - LAST_OFFSET;
   return mean(
@@ -66,91 +56,36 @@ const chanceOf = (item: Readonly<Item>): number => {
   );
 };
 
-const UNANSWERED = "unanswered";
-
-const predictedChoice = ({ outcome }: Readonly<Scored>): string => {
-  if (outcome.status === "answered" && outcome.decision.type === "choice") {
-    return outcome.decision.choice;
-  }
-  return UNANSWERED;
-};
-
-const predictedNoul = ({ outcome }: Readonly<Scored>): string => {
-  if (outcome.status === "answered" && outcome.decision.type === "noul") {
-    return String(outcome.decision.noul >= NOUL_THRESHOLD);
-  }
-  return UNANSWERED;
-};
-
-const goldOf = ({ item }: Readonly<Scored>): string => String(item.gold);
-
-const optionKeys = (item: Readonly<Item>): readonly string[] => {
-  if (item.type === "choice") {
-    return Object.keys(item.options);
-  }
-  return [];
-};
-
-const choiceClasses = (rows: readonly Scored[]): readonly string[] => [
-  ...new Set(rows.flatMap(({ item }) => optionKeys(item))),
-];
-
-const confusionOf = (
-  rows: readonly Scored[],
-  classes: readonly string[],
-  predicted: (row: Readonly<Scored>) => string,
-): ConfusionMatrix<string> =>
-  ConfusionMatrix.fromLabels(
-    rows.map((row) => goldOf(row)),
-    rows.map((row) => predicted(row)),
-    { labels: [...classes, UNANSWERED] },
-  );
-
-const finiteOrZero = (value: number): number => {
-  if (Number.isFinite(value)) {
-    return value;
-  }
-  return NONE;
-};
-
-const balancedAccuracy = (rows: readonly Scored[]): number => {
-  const classes = [String(true), String(false)];
-  const confusion = confusionOf(rows, classes, predictedNoul);
-  return mean(
-    classes
-      .filter((label) => confusion.getPositiveCount(label) > NONE)
-      .map((label) => confusion.getTruePositiveRate(label)),
-  );
-};
-
-const macroF1 = (rows: readonly Scored[]): number => {
-  const classes = choiceClasses(rows);
-  const confusion = confusionOf(rows, classes, predictedChoice);
-  return mean(classes.map((label) => finiteOrZero(confusion.getF1Score(label))));
-};
-
-const macroF1Chance = (rows: readonly Scored[]): number => {
-  const classes = choiceClasses(rows);
-  const guess = FULL / Math.max(FULL, classes.length);
-  return mean(
-    classes.map((label) => {
-      const prevalence =
-        rows.filter((row) => goldOf(row) === label).length / Math.max(FULL, rows.length);
-      return (TWO * prevalence * guess) / Math.max(Number.EPSILON, prevalence + guess);
-    }),
-  );
-};
-
 const rawScore = (rows: readonly Scored[]): Readonly<{ raw: number; chance: number }> => {
-  if (rows.some(({ item }) => item.type === "noul")) {
+  if (
+    pipe(
+      rows,
+      Arr.some(({ item }) => item.type === "noul"),
+    )
+  ) {
     return { raw: balancedAccuracy(rows), chance: FULL / NOUL_OPTIONS };
   }
-  if (rows.some(({ item }) => item.type === "choice")) {
+  if (
+    pipe(
+      rows,
+      Arr.some(({ item }) => item.type === "choice"),
+    )
+  ) {
     return { raw: macroF1(rows), chance: macroF1Chance(rows) };
   }
   return {
-    raw: mean(rows.map((row) => credit(row))),
-    chance: mean(rows.map(({ item }) => chanceOf(item))),
+    raw: mean(
+      pipe(
+        rows,
+        Arr.map((row) => credit(row)),
+      ),
+    ),
+    chance: mean(
+      pipe(
+        rows,
+        Arr.map(({ item }) => chanceOf(item)),
+      ),
+    ),
   };
 };
 
@@ -165,7 +100,7 @@ const PAIR_MEMBER = /-\d+[ab]$/u;
 const PAIR_SIZE = 2;
 const SIDE_LENGTH = 1;
 
-const pairOf = ({ item }: Readonly<Scored>): string => item.id.slice(NONE, -SIDE_LENGTH);
+const pairOf = ({ item }: Readonly<Scored>): string => pipe(item.id, Str.slice(NONE, -SIDE_LENGTH));
 
 const RESAMPLES = 1000;
 const SEED = "ja-decision-bench";
@@ -190,11 +125,23 @@ const intervalOf = (values: readonly number[]): Interval => {
 };
 
 const isSolvedPair = (cluster: Cluster): boolean =>
-  cluster.length === PAIR_SIZE && cluster.every((row) => credit(row) === FULL);
+  cluster.length === PAIR_SIZE &&
+  pipe(
+    cluster,
+    Arr.every((row) => credit(row) === FULL),
+  );
 
 const pairRate = (clusters: readonly Cluster[]): number => {
-  const pairs = clusters.filter((cluster) => cluster.length === PAIR_SIZE);
-  return pairs.filter((pair) => isSolvedPair(pair)).length / Math.max(FULL, pairs.length);
+  const pairs = pipe(
+    clusters,
+    Arr.filter((cluster) => cluster.length === PAIR_SIZE),
+  );
+  return (
+    pipe(
+      pairs,
+      Arr.filter((pair) => isSolvedPair(pair)),
+    ).length / Math.max(FULL, pairs.length)
+  );
 };
 
 const skillOfRows = (rows: readonly Scored[]): number => {
@@ -213,7 +160,10 @@ const pairAccuracyOf = (
   clusters: readonly Cluster[],
   samples: readonly (readonly Cluster[])[],
 ): TaskResult["test"]["pairs"] => {
-  const count = clusters.filter((cluster) => cluster.length === PAIR_SIZE).length;
+  const count = pipe(
+    clusters,
+    Arr.filter((cluster) => cluster.length === PAIR_SIZE),
+  ).length;
   if (count === NONE) {
     return { status: "unavailable" };
   }
@@ -221,24 +171,42 @@ const pairAccuracyOf = (
     status: "measured",
     accuracy: pairRate(clusters),
     count,
-    interval: intervalOf(samples.map((sample) => pairRate(sample))),
+    interval: intervalOf(
+      pipe(
+        samples,
+        Arr.map((sample) => pairRate(sample)),
+      ),
+    ),
   };
 };
 
 const metric = (rows: readonly Scored[]): TaskResult["test"] => {
   const { raw, chance } = rawScore(rows);
-  const clusters = Object.values(Arr.groupBy(rows, clusterKey));
+  const clusters = Rec.values(Arr.groupBy(rows, clusterKey));
   const samples = resample(clusters);
-  const failed = rows.filter(({ outcome }) => outcome.status === "failed").length;
+  const failed = pipe(
+    rows,
+    Arr.filter(({ outcome }) => outcome.status === "failed"),
+  ).length;
   return {
     total: rows.length,
     failed,
     coverage: (rows.length - failed) / Math.max(FULL, rows.length),
     raw,
-    accuracy: mean(rows.map((row) => credit(row))),
+    accuracy: mean(
+      pipe(
+        rows,
+        Arr.map((row) => credit(row)),
+      ),
+    ),
     chance,
     skill: skillOf(raw, chance),
-    skillInterval: intervalOf(samples.map((sample) => skillOfRows(sample.flat()))),
+    skillInterval: intervalOf(
+      pipe(
+        samples,
+        Arr.map((sample) => skillOfRows(sample.flat())),
+      ),
+    ),
     calibration: calibrationOf(rows),
     pairs: pairAccuracyOf(clusters, samples),
   };
@@ -254,15 +222,24 @@ const costOf = (outcome: Readonly<Outcome>): number => {
 const percentile = (values: readonly number[], rank: number): number => {
   const position = Math.max(NONE, Math.ceil(rank * values.length) - LAST_OFFSET);
   return pipe(
-    values.toSorted((left, right) => left - right),
+    values,
+    Arr.sortBy(Num.Order),
     Arr.get(position),
     Option.getOrElse(() => NONE),
   );
 };
 
 const usage = (rows: readonly Scored[]): Pick<TaskResult, "p50Ms" | "p95Ms" | "costUsd"> => {
-  const latencies = rows.map(({ outcome }) => outcome.latencyMs);
-  const costUsd = Num.sumAll(rows.map(({ outcome }) => costOf(outcome)));
+  const latencies = pipe(
+    rows,
+    Arr.map(({ outcome }) => outcome.latencyMs),
+  );
+  const costUsd = Num.sumAll(
+    pipe(
+      rows,
+      Arr.map(({ outcome }) => costOf(outcome)),
+    ),
+  );
   return {
     p50Ms: percentile(latencies, P50),
     p95Ms: percentile(latencies, P95),

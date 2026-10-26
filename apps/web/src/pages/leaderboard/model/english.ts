@@ -1,5 +1,5 @@
 import type { TaskId } from "bench-summary/schema";
-import { Option, Schema } from "effect";
+import { Option, Schema, Array as Arr, pipe } from "effect";
 
 import referenceJson from "./english-reference.json";
 import { rankedModels } from "./ranking";
@@ -55,20 +55,27 @@ const japaneseOf = (result: TaskResult): readonly Scores[] => {
 };
 
 const rowsOf = (model: ModelResult, score: EnglishScore): readonly EnglishRow[] =>
-  model.tasks
-    .filter((result) => result.task === JAPANESE_TASK)
-    .flatMap((result) => japaneseOf(result))
-    .map((japanese) => ({
+  pipe(
+    model.tasks,
+    Arr.filter((result) => result.task === JAPANESE_TASK),
+    Arr.flatMap((result) => japaneseOf(result)),
+    Arr.map((japanese) => ({
       model,
       entry: score.entry,
       english: { accuracy: score.accuracy, pairAccuracy: score.pairAccuracy },
       japanese,
-    }));
+    })),
+  );
 
-const englishRows: readonly EnglishRow[] = rankedModels.flatMap((model) =>
-  reference.models
-    .filter((score) => score.model === model.model)
-    .flatMap((score) => rowsOf(model, score)),
+const englishRows: readonly EnglishRow[] = pipe(
+  rankedModels,
+  Arr.flatMap((model) =>
+    pipe(
+      reference.models,
+      Arr.filter((score) => score.model === model.model),
+      Arr.flatMap((score) => rowsOf(model, score)),
+    ),
+  ),
 );
 
 const englishSource = reference.source;

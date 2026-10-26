@@ -1,8 +1,11 @@
+import { LabelStatsSchema } from "bench-summary/schema";
+import type { TaskId } from "bench-summary/schema";
 import { Array as Arr, Effect, Number as Num, Option, Order, Record, Schema, pipe } from "effect";
 
+import { ItemSchema } from "./item.ts";
 import type { Item, Question } from "./item.ts";
 import { Opus } from "./runtime.ts";
-import { toJson } from "./store.ts";
+import { dataPath, toJson, writeJson, writeJsonl } from "./store.ts";
 
 const SAMPLE_COUNT = 3;
 const UNANIMOUS = 1;
@@ -14,12 +17,15 @@ const byGroupSize = Order.mapInput(Num.Order, (group: readonly string[]) => grou
 
 const answerKeys = (question: Readonly<Question>): readonly string[] => {
   if (question.type === "choice") {
-    return Object.keys(question.options);
+    return Record.keys(question.options);
   }
   if (question.type === "noul") {
     return ["true", "false"];
   }
-  return question.options.map((_level, index) => String(index));
+  return pipe(
+    question.options,
+    Arr.map((_level, index) => String(index)),
+  );
 };
 
 const toRequest = (
@@ -48,8 +54,16 @@ const askThrice = Effect.fn("askThrice")(function* askThrice(question: Readonly<
     (sample) => opus.ask({ system: SYSTEM, prompt, schema: AnswerSchema, jsonSchema, sample }),
   );
   return {
-    answers: results.map(({ output }) => output.answer),
-    costUsd: Num.sumAll(results.map(({ costUsd }) => costUsd)),
+    answers: pipe(
+      results,
+      Arr.map(({ output }) => output.answer),
+    ),
+    costUsd: Num.sumAll(
+      pipe(
+        results,
+        Arr.map(({ costUsd }) => costUsd),
+      ),
+    ),
   };
 });
 
@@ -72,4 +86,21 @@ const splitOf = (agreement: number): Item["split"] => {
   return "hard";
 };
 
-export { askThrice, splitOf, tally, toRequest };
+const writeLabeled = Effect.fn("writeLabeled")(function* writeLabeled(
+  task: TaskId,
+  items: readonly Item[],
+  stats: Omit<typeof LabelStatsSchema.Type, "task" | "items" | "hard">,
+) {
+  yield* writeJsonl(ItemSchema, yield* dataPath({ task, extension: "jsonl" }), items);
+  yield* writeJson(LabelStatsSchema, yield* dataPath({ task, extension: "stats.json" }), {
+    task,
+    items: items.length,
+    hard: pipe(
+      items,
+      Arr.filter(({ split }) => split === "hard"),
+    ).length,
+    ...stats,
+  });
+});
+
+export { askThrice, splitOf, tally, toRequest, writeLabeled };

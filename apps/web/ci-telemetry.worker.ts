@@ -1,4 +1,4 @@
-import { Data, Effect, Logger, ManagedRuntime, Schema, pipe } from "effect";
+import { Effect, Logger, ManagedRuntime, Schema, String as Str, pipe } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import type { CiTelemetryEnv } from "./alchemy.run.ts";
@@ -36,14 +36,21 @@ const Payload = Schema.Struct({ jobs: Schema.Array(Job) });
 
 type Run = Readonly<Record<string, string>>;
 
-class Unauthorized extends Data.TaggedError("Unauthorized")<{ readonly reason: string }> {}
+const taggedError = Schema.TaggedError;
+
+class Unauthorized extends taggedError<Unauthorized, { readonly brand: unique symbol }>()(
+  "Unauthorized",
+  {
+    reason: Schema.String,
+  },
+) {}
 
 const runtime = ManagedRuntime.make(
   Logger.layer([Logger.withLeveledConsole(Logger.formatStructured)]),
 );
 
 const bearer = (request: Request): string =>
-  (request.headers.get("authorization") ?? "").replace(/^Bearer /u, "");
+  Str.replace(/^Bearer /u, "")(request.headers.get("authorization") ?? "");
 
 const verify = (
   request: Request,
@@ -53,11 +60,11 @@ const verify = (
     const { payload } = yield* Effect.tryPromise({
       try: () =>
         jwtVerify(bearer(request), jwks, { issuer: ISSUER, audience: CI_TELEMETRY_AUDIENCE }),
-      catch: (error) => new Unauthorized({ reason: String(error) }),
+      catch: (error) => Unauthorized.make({ reason: String(error) }),
     });
     const claims = yield* Schema.decodeUnknownEffect(Claims)(payload);
     if (claims.repository !== env.GITHUB_REPOSITORY) {
-      return yield* new Unauthorized({ reason: `unexpected repository ${claims.repository}` });
+      return yield* Unauthorized.make({ reason: `unexpected repository ${claims.repository}` });
     }
     return claims;
   });

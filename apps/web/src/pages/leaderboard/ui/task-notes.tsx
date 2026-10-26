@@ -1,3 +1,4 @@
+import { Array as Arr, pipe } from "effect";
 import { Asterisk, ListChecks, Ruler, Tag } from "lucide-react";
 
 import { SPLIT_MARK } from "#/pages/leaderboard/model/display-label";
@@ -39,7 +40,11 @@ const notesOf = (task: Readonly<TaskInfo>): readonly Note[] => [
     icon: <ListChecks aria-hidden="true" />,
     text: `test ${count(task.test)} 件を採点、hard ${count(task.hard)} 件は除外`,
   },
-  ...summary.labeling.filter((stats) => stats.task === task.task).map((stats) => goldNote(stats)),
+  ...pipe(
+    summary.labeling,
+    Arr.filter((stats) => stats.task === task.task),
+    Arr.map((stats) => goldNote(stats)),
+  ),
   ...splitNotes(task),
 ];
 

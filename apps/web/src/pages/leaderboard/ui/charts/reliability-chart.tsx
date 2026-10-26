@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 import { Legend, Scatter, ScatterChart } from "recharts";
 
@@ -10,7 +11,7 @@ import { pointsOf, toPercentPoints } from "#/pages/leaderboard/ui/format";
 import { ChartContainer } from "#/shared/ui/chart";
 
 import { ReliabilityAxes } from "./reliability-axes";
-import { useLegendHandlers, useSeriesStates } from "./reliability-state";
+import { useLegendHandlers, useSeriesState } from "./reliability-state";
 import type { SeriesState } from "./reliability-state";
 
 type Point = Readonly<{ label: string; confidence: number; accuracy: number; count: number }>;
@@ -33,7 +34,15 @@ const FULL_PERCENT = 100;
 const lowestOf = (series: readonly Series[]): number =>
   Math.min(
     FULL_PERCENT,
-    ...series.flatMap(({ points }) => points.map(({ confidence }) => confidence)),
+    ...pipe(
+      series,
+      Arr.flatMap(({ points }) =>
+        pipe(
+          points,
+          Arr.map(({ confidence }) => confidence),
+        ),
+      ),
+    ),
   );
 
 const rankOf = ({ value }: Readonly<{ value: string | undefined }>): number =>
@@ -44,39 +53,49 @@ const legendText = (value: unknown): ReactNode => (
 );
 
 const seriesOf = (entries: readonly TaskEntry[]): readonly Series[] =>
-  entries.flatMap((entry) => {
-    const { calibration } = entry.result.test;
-    if (calibration.status === "unavailable") {
-      return [];
-    }
-    const label = displayLabel(entry);
-    return [
-      {
-        model: entry.model.model,
-        name: `${entry.mark} ${label}`,
-        color: colorOf(entry.model.model),
-        points: calibration.curve.map((bin) => ({
-          label,
-          confidence: toPercentPoints(bin.meanPredicted),
-          accuracy: toPercentPoints(bin.observedFrequency),
-          count: bin.count,
-        })),
-      },
-    ];
-  });
+  pipe(
+    entries,
+    Arr.flatMap((entry) => {
+      const { calibration } = entry.result.test;
+      if (calibration.status === "unavailable") {
+        return [];
+      }
+      const label = displayLabel(entry);
+      return [
+        {
+          model: entry.model.model,
+          name: `${entry.mark} ${label}`,
+          color: colorOf(entry.model.model),
+          points: pipe(
+            calibration.curve,
+            Arr.map((bin) => ({
+              label,
+              confidence: toPercentPoints(bin.meanPredicted),
+              accuracy: toPercentPoints(bin.observedFrequency),
+              count: bin.count,
+            })),
+          ),
+        },
+      ];
+    }),
+  );
 
 const describe = (series: readonly Series[]): string =>
-  series
-    .map(
+  pipe(
+    series,
+    Arr.map(
       ({ name, points }) =>
-        `${name}: ${points
-          .map(
+        `${name}: ${pipe(
+          points,
+          Arr.map(
             ({ confidence, accuracy, count }) =>
               `確信度 ${pointsOf(confidence)}% で正解率 ${pointsOf(accuracy)}%（${count} 件）`,
-          )
-          .join("、")}`,
-    )
-    .join("。");
+          ),
+          Arr.join("、"),
+        )}`,
+    ),
+    Arr.join("。"),
+  );
 
 const lineOf = ({
   color,
@@ -92,7 +111,7 @@ const ReliabilityChart = ({
   title,
 }: Readonly<{ task: string; entries: readonly TaskEntry[]; title: string }>): ReactNode => {
   const plain = seriesOf(entries);
-  const series = useSeriesStates({ task, series: plain });
+  const stateOf = useSeriesState({ task });
   const legend = useLegendHandlers({ task, series: plain });
   return (
     <ChartContainer>
@@ -106,23 +125,27 @@ const ReliabilityChart = ({
           onMouseEnter={legend.handleMouseEnter}
           onMouseLeave={legend.handleMouseLeave}
         />
-        {series.map(({ model, name, color, points, state }) => {
-          const { opacity, line } = lineOf({ color, state });
-          return (
-            <Scatter
-              key={model}
-              name={name}
-              isAnimationActive={false}
-              data={points}
-              fill={color}
-              fillOpacity={opacity}
-              line={line}
-              hide={state.hidden}
-              onMouseEnter={state.handleMouseEnter}
-              onMouseLeave={state.handleMouseLeave}
-            />
-          );
-        })}
+        {pipe(
+          plain,
+          Arr.map(({ model, name, color, points }) => {
+            const state = stateOf(model);
+            const { opacity, line } = lineOf({ color, state });
+            return (
+              <Scatter
+                key={model}
+                name={name}
+                isAnimationActive={false}
+                data={points}
+                fill={color}
+                fillOpacity={opacity}
+                line={line}
+                hide={state.hidden}
+                onMouseEnter={state.handleMouseEnter}
+                onMouseLeave={state.handleMouseLeave}
+              />
+            );
+          }),
+        )}
       </ScatterChart>
     </ChartContainer>
   );

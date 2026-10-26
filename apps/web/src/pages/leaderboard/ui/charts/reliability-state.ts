@@ -1,4 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Array as Arr, pipe } from "effect";
 import { Atom } from "effect/reactivity";
 
 type Focus = Readonly<{ status: "none" }> | Readonly<{ status: "focused"; model: string }>;
@@ -31,7 +32,10 @@ const toggled = ({
   model,
 }: Readonly<{ hidden: readonly string[]; model: string }>): readonly string[] => {
   if (hidden.includes(model)) {
-    return hidden.filter((item) => item !== model);
+    return pipe(
+      hidden,
+      Arr.filter((item) => item !== model),
+    );
   }
   return [...hidden, model];
 };
@@ -53,33 +57,28 @@ const modelNamed = ({
   series,
   name,
 }: Readonly<{ series: readonly SeriesKey[]; name: string | undefined }>): Focus => {
-  const [found] = series
-    .filter((item) => item.name === name)
-    .map(({ model }): Focus => ({ status: "focused", model }));
+  const [found] = pipe(
+    series,
+    Arr.filter((item) => item.name === name),
+    Arr.map(({ model }): Focus => ({ status: "focused", model })),
+  );
   return found ?? NO_FOCUS;
 };
 
-const useSeriesStates = <Item extends SeriesKey>({
-  task,
-  series,
-}: Readonly<{ task: string; series: readonly Item[] }>): readonly (Item &
-  Readonly<{ state: SeriesState }>)[] => {
+const useSeriesState = ({ task }: Readonly<{ task: string }>): ((model: string) => SeriesState) => {
   const hidden = useAtomValue(hiddenAtom(task));
   const focus = useAtomValue(focusAtom(task));
   const setFocus = useAtomSet(focusAtom(task));
-  return series.map((item) => ({
-    ...item,
-    state: {
-      hidden: hidden.includes(item.model),
-      focus: focusOf({ focus, model: item.model }),
-      handleMouseEnter: () => {
-        setFocus({ status: "focused", model: item.model });
-      },
-      handleMouseLeave: () => {
-        setFocus(NO_FOCUS);
-      },
+  return (model) => ({
+    hidden: hidden.includes(model),
+    focus: focusOf({ focus, model }),
+    handleMouseEnter: () => {
+      setFocus({ status: "focused", model });
     },
-  }));
+    handleMouseLeave: () => {
+      setFocus(NO_FOCUS);
+    },
+  });
 };
 
 const useLegendHandlers = ({
@@ -104,5 +103,5 @@ const useLegendHandlers = ({
   };
 };
 
-export { useLegendHandlers, useSeriesStates };
+export { useLegendHandlers, useSeriesState };
 export type { SeriesState };

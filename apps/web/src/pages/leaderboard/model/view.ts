@@ -1,4 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { String as Str, pipe, Array as Arr } from "effect";
 import { Atom } from "effect/reactivity";
 
 import { entriesOf, rankedModels } from "./ranking";
@@ -43,8 +44,11 @@ const narrow = <Item>({
   scope: Scope;
   query: string;
 }>): readonly Item[] => {
-  const needle = query.trim().toLowerCase();
-  const matches = items.filter((item) => labelOf(item).toLowerCase().includes(needle));
+  const needle = Str.toLowerCase(Str.trim(query));
+  const matches = pipe(
+    items,
+    Arr.filter((item) => pipe(Str.toLowerCase(labelOf(item)), Str.includes(needle))),
+  );
   if (scope === "all") {
     return matches;
   }

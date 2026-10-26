@@ -1,3 +1,4 @@
+import { String as Str, pipe } from "effect";
 import { Clock } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -6,7 +7,10 @@ import { summary } from "#/pages/leaderboard/model/summary";
 import { ModelFilter } from "./model-filter";
 import { TaskNav } from "./task-nav";
 
-const updatedAt = summary.generatedAt.replace(/T(?<time>\d{2}:\d{2}).*$/u, " $<time> UTC");
+const updatedAt = pipe(
+  summary.generatedAt,
+  Str.replace(/T(?<time>\d{2}:\d{2}).*$/u, " $<time> UTC"),
+);
 
 const PageShell = ({
   header,

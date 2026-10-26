@@ -1,3 +1,5 @@
+import { Array as Arr, pipe } from "effect";
+
 import { summary } from "./summary";
 
 const PALETTE = [
@@ -23,7 +25,10 @@ const generated = (order: number): string => {
 };
 
 const colors: ReadonlyMap<string, string> = new Map(
-  summary.models.map(({ model }, order) => [model, PALETTE[order] ?? generated(order)]),
+  pipe(
+    summary.models,
+    Arr.map(({ model }, order) => [model, PALETTE[order] ?? generated(order)]),
+  ),
 );
 
 const colorOf = (model: string): string => colors.get(model) ?? FALLBACK;

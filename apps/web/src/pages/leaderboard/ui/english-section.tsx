@@ -1,3 +1,4 @@
+import { String as Str, pipe } from "effect";
 import { CircleAlert, ExternalLink, FlaskConical, Languages, Server, Sigma } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -34,7 +35,7 @@ const NOTES: readonly Note[] = [
   },
 ];
 
-const sourceLabel = `${englishSource.name}（${englishSource.commit.slice(COMMIT_START, SHORT_COMMIT)}、${englishSource.retrievedAt} 取得、${englishSource.license}）`;
+const sourceLabel = `${englishSource.name}（${pipe(englishSource.commit, Str.slice(COMMIT_START, SHORT_COMMIT))}、${englishSource.retrievedAt} 取得、${englishSource.license}）`;
 
 const EnglishSection = (): ReactNode => (
   <Section id="english" title="英語との比較（参考）">

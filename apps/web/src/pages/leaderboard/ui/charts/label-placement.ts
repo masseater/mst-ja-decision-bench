@@ -1,3 +1,5 @@
+import { Array as Arr, pipe, Number as Num, Order } from "effect";
+
 type Box = Readonly<{ left: number; right: number; top: number; bottom: number }>;
 
 type Anchor = Readonly<{ across: number; down: number; whiskerTop: number; whiskerBottom: number }>;
@@ -18,15 +20,18 @@ const MARKER = 6;
 const WHISKER = 4;
 const HALF = 2;
 
-const CANDIDATES: readonly LabelSpot[] = RINGS.flatMap(({ ring, radius }) =>
-  Array.from({ length: SLOTS }, (_slot, slot) => {
-    const angle = (slot / SLOTS) * Math.PI * HALF;
-    return {
-      dx: Math.round(Math.cos(angle) * radius),
-      dy: Math.round(-Math.sin(angle) * radius),
-      ring,
-    };
-  }),
+const CANDIDATES: readonly LabelSpot[] = pipe(
+  RINGS,
+  Arr.flatMap(({ ring, radius }) =>
+    Array.from({ length: SLOTS }, (_slot, slot) => {
+      const angle = (slot / SLOTS) * Math.PI * HALF;
+      return {
+        dx: Math.round(Math.cos(angle) * radius),
+        dy: Math.round(-Math.sin(angle) * radius),
+        ring,
+      };
+    }),
+  ),
 );
 
 const FALLBACK: LabelSpot = { dx: FAR_RADIUS, dy: CENTER, ring: "far" };
@@ -50,16 +55,25 @@ const overlaps = (one: Box, other: Box): boolean =>
   other.top < one.bottom;
 
 const placeLabels = (anchors: readonly Anchor[]): readonly LabelSpot[] => {
-  const marks = anchors.flatMap((anchor) => obstaclesOf(anchor));
+  const marks = pipe(
+    anchors,
+    Arr.flatMap((anchor) => obstaclesOf(anchor)),
+  );
   const placed: Box[] = [];
-  return anchors.map((anchor) => {
-    const obstacles = [...placed, ...marks];
-    const clashes = (spot: LabelSpot): number =>
-      obstacles.filter((obstacle) => overlaps(labelBox(anchor, spot), obstacle)).length;
-    const [best = FALLBACK] = CANDIDATES.toSorted((left, right) => clashes(left) - clashes(right));
-    placed.push(labelBox(anchor, best));
-    return best;
-  });
+  return pipe(
+    anchors,
+    Arr.map((anchor) => {
+      const obstacles = [...placed, ...marks];
+      const clashes = (spot: LabelSpot): number =>
+        pipe(
+          obstacles,
+          Arr.filter((obstacle) => overlaps(labelBox(anchor, spot), obstacle)),
+        ).length;
+      const [best = FALLBACK] = pipe(CANDIDATES, Arr.sortBy(Order.mapInput(Num.Order, clashes)));
+      placed.push(labelBox(anchor, best));
+      return best;
+    }),
+  );
 };
 
 export { placeLabels };

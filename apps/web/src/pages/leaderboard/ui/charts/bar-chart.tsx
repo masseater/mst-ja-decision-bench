@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 import { Bar, CartesianGrid, BarChart as Chart, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -50,15 +51,20 @@ const toPoint = (row: ChartRow): readonly BarPoint[] => {
 };
 
 const toPoints = (rows: readonly ChartRow[]): readonly BarPoint[] =>
-  rows.flatMap((row) => toPoint(row));
+  pipe(
+    rows,
+    Arr.flatMap((row) => toPoint(row)),
+  );
 
 const describe = ({
   rows,
   title,
 }: Readonly<{ rows: readonly ChartRow[]; title: string }>): string =>
-  `${title}: ${toPoints(rows)
-    .map(({ label, value }) => `${label} ${pointsOf(value)}`)
-    .join("、")}`;
+  `${title}: ${pipe(
+    toPoints(rows),
+    Arr.map(({ label, value }) => `${label} ${pointsOf(value)}`),
+    Arr.join("、"),
+  )}`;
 
 const BarChart = ({
   rows,

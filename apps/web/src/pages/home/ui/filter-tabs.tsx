@@ -1,3 +1,4 @@
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import type { TodoFilter } from "#/pages/home/model/filter";
@@ -8,9 +9,10 @@ const FILTERS: readonly TodoFilter[] = ["all", "open", "done"];
 
 const FilterTabs = (): ReactNode => (
   <div className="flex gap-2">
-    {FILTERS.map((filter) => (
-      <FilterTab key={filter} filter={filter} />
-    ))}
+    {pipe(
+      FILTERS,
+      Arr.map((filter) => <FilterTab key={filter} filter={filter} />),
+    )}
   </div>
 );
 
