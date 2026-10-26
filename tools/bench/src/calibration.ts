@@ -1,5 +1,5 @@
 import type { TaskResult } from "bench-summary/schema";
-import { Number as Num, Option } from "effect";
+import { Number as Num, Option, Array as Arr, pipe, Record as Rec } from "effect";
 import { brierScore, calibrationCurve, expectedCalibrationError } from "forecast-calibration-kit";
 import type { BinaryOutcome, Sample } from "forecast-calibration-kit";
 
@@ -39,13 +39,22 @@ const choiceForecast = (item: ChoiceItem, decision: Decision): Option.Option<For
     return Option.none();
   }
   return Option.map(Option.fromNullishOr(decision.probabilities), (probabilities) => {
-    const labels = Object.keys(item.options);
+    const labels = Rec.keys(item.options);
     const probabilityOf = (label: string): number => probabilities[label] ?? NONE;
-    const confidence = Math.max(NONE, ...labels.map((label) => probabilityOf(label)));
+    const confidence = Math.max(
+      NONE,
+      ...pipe(
+        labels,
+        Arr.map((label) => probabilityOf(label)),
+      ),
+    );
     return {
       sample: sampleOf(confidence, decision.choice === item.gold),
       brier: multiClassBrier(
-        labels.map((label) => sampleOf(probabilityOf(label), label === item.gold)),
+        pipe(
+          labels,
+          Arr.map((label) => sampleOf(probabilityOf(label), label === item.gold)),
+        ),
       ),
     };
   });
@@ -81,22 +90,35 @@ const forecastOf = ({ item, outcome }: Readonly<Scored>): Option.Option<Forecast
 };
 
 const calibrationOf = (rows: readonly Scored[]): TaskResult["test"]["calibration"] => {
-  const forecasts = rows.flatMap((row) => Option.toArray(forecastOf(row)));
+  const forecasts = pipe(
+    rows,
+    Arr.flatMap((row) => Option.toArray(forecastOf(row))),
+  );
   if (forecasts.length === NONE) {
     return { status: "unavailable" };
   }
-  const samples = forecasts.map(({ sample }) => sample);
+  const samples = pipe(
+    forecasts,
+    Arr.map(({ sample }) => sample),
+  );
   return {
     status: "measured",
     ece: expectedCalibrationError(samples, { bins: CALIBRATION_BINS }),
-    brier: Num.sumAll(forecasts.map(({ brier }) => brier)) / forecasts.length,
+    brier:
+      Num.sumAll(
+        pipe(
+          forecasts,
+          Arr.map(({ brier }) => brier),
+        ),
+      ) / forecasts.length,
     forecasts: forecasts.length,
-    curve: calibrationCurve(samples, { bins: CALIBRATION_BINS }).map(
-      ({ meanPredicted, observedFrequency, count }) => ({
+    curve: pipe(
+      calibrationCurve(samples, { bins: CALIBRATION_BINS }),
+      Arr.map(({ meanPredicted, observedFrequency, count }) => ({
         meanPredicted,
         observedFrequency,
         count,
-      }),
+      })),
     ),
   };
 };

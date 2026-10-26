@@ -16,6 +16,7 @@ import {
   Redacted,
   Result,
   Schema,
+  Order,
 } from "effect";
 
 import { DecisionSchema, NOUL_CRITERIA, OutcomeSchema } from "./item.ts";
@@ -109,28 +110,46 @@ const toQuestions = (item: Readonly<Item>): DecisionsRequest["questions"] => {
 };
 
 const toSplitQuestions = (item: Readonly<ChoiceItem>): DecisionsRequest["questions"] =>
-  Object.fromEntries(
-    Object.entries(item.options).map(([key, option]) => [
-      key,
-      {
-        type: "noul",
-        instructions: `${item.criteria}\n次の答えは正しいですか: ${option}`,
-        criteria: NOUL_CRITERIA,
-      },
-    ]),
+  Rec.fromEntries(
+    pipe(
+      Rec.toEntries(item.options),
+      Arr.map(([key, option]) => [
+        key,
+        {
+          type: "noul" as const,
+          instructions: `${item.criteria}\n次の答えは正しいですか: ${option}`,
+          criteria: NOUL_CRITERIA,
+        },
+      ]),
+    ),
   );
+
+const byNoulDescending = Order.mapInput(
+  Order.flip(Num.Order),
+  ({ noul }: Readonly<{ noul: number }>) => noul,
+);
 
 const decodeSplit = (item: Readonly<ChoiceItem>, answers: Answers): Option.Option<Decision> =>
   Option.gen(function* split() {
     const record = yield* Option.all(pipe(answers, Rec.map(noulOf)));
     const scored = yield* Option.all(
-      Object.keys(item.options).map((key) =>
-        Option.map(Option.fromNullishOr(record[key]), (noul) => ({ key, noul })),
+      pipe(
+        Rec.keys(item.options),
+        Arr.map((key) => Option.map(Option.fromNullishOr(record[key]), (noul) => ({ key, noul }))),
       ),
     );
-    const best = yield* Arr.head(scored.toSorted((left, right) => right.noul - left.noul));
-    const total = Math.max(MIN_TOTAL, Num.sumAll(scored.map(({ noul }) => noul)));
-    const probabilities = Object.fromEntries(scored.map(({ key, noul }) => [key, noul / total]));
+    const best = yield* pipe(scored, Arr.sortBy(byNoulDescending), Arr.head);
+    const nouls = pipe(
+      scored,
+      Arr.map(({ noul }) => noul),
+    );
+    const total = Math.max(MIN_TOTAL, Num.sumAll(nouls));
+    const probabilities = Rec.fromEntries(
+      pipe(
+        scored,
+        Arr.map(({ key, noul }) => [key, noul / total]),
+      ),
+    );
     return { type: "choice" as const, choice: best.key, probabilities };
   });
 

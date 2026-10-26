@@ -1,3 +1,4 @@
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import { displayLabel } from "#/pages/leaderboard/model/display-label";
@@ -35,7 +36,10 @@ const calibrationText =
   };
 
 const supportedOf = (entries: readonly TaskEntry[]): readonly TaskEntry[] =>
-  entries.filter(({ result }) => result.support === "supported");
+  pipe(
+    entries,
+    Arr.filter(({ result }) => result.support === "supported"),
+  );
 
 const COLUMNS: readonly TableColumn<TaskEntry>[] = [
   { id: "ece", header: "ECE", sortValue: calibrationValue("ece"), display: calibrationText("ece") },

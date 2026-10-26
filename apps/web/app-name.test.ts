@@ -3,12 +3,12 @@ import { D1, Rules, Zone } from "alchemy/Cloudflare";
 import { App, Secret } from "alchemy/Fly";
 import { Stage } from "alchemy/Stage";
 import { inMemoryState } from "alchemy/State";
-import { Effect, Exit, Layer, Match, Redacted } from "effect";
+import { Effect, Exit, Layer, Match, Redacted, String as Str, pipe } from "effect";
 import { expect, test } from "vite-plus/test";
 
 import { APP_NAME, requireAppPrefix } from "./app-name.ts";
 
-const ENV_PREFIX = `${APP_NAME.replaceAll("-", "_")}_`;
+const ENV_PREFIX = `${pipe(APP_NAME, Str.replaceAll("-", "_"))}_`;
 
 type Resource =
   | Readonly<{ type: "database"; props: Readonly<{ name?: string }> }>

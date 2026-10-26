@@ -1,5 +1,6 @@
 "use client";
 
+import { Array as Arr, pipe } from "effect";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -33,17 +34,20 @@ const SortHeaderRow = <Row,>({
           {ICONS[labelDirection]}
         </Button>
       </TableHead>
-      {columns.map(({ id, header }) => {
-        const direction = directionOf({ sort, column: id });
-        return (
-          <TableHead key={id} scope="col" aria-sort={ARIA_SORT[direction]} className="text-right">
-            <Button variant="ghost" size="xs" value={id} onClick={handleSort}>
-              {header}
-              {ICONS[direction]}
-            </Button>
-          </TableHead>
-        );
-      })}
+      {pipe(
+        columns,
+        Arr.map(({ id, header }) => {
+          const direction = directionOf({ sort, column: id });
+          return (
+            <TableHead key={id} scope="col" aria-sort={ARIA_SORT[direction]} className="text-right">
+              <Button variant="ghost" size="xs" value={id} onClick={handleSort}>
+                {header}
+                {ICONS[direction]}
+              </Button>
+            </TableHead>
+          );
+        }),
+      )}
     </TableRow>
   );
 };

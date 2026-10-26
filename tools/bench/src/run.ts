@@ -1,7 +1,16 @@
 import { percent as pct, percentRange, usdAmount } from "bench-summary/format";
 import { LabelStatsSchema, SummarySchema } from "bench-summary/schema";
 import type { Summary, Support, TaskResult } from "bench-summary/schema";
-import { DateTime, Effect, Number as Num, Option, Schema } from "effect";
+import {
+  DateTime,
+  Effect,
+  Number as Num,
+  Option,
+  Schema,
+  String as Str,
+  pipe,
+  Array as Arr,
+} from "effect";
 
 import { ItemSchema, OutcomeSchema } from "./item.ts";
 import type { Item, Scored } from "./item.ts";
@@ -102,8 +111,9 @@ const pairCell = (pairs: TaskResult["test"]["pairs"]): string => {
 const indexTable = (summary: Summary): readonly string[] => [
   "| モデル | 指数（参考） | 全タスクの費用 (USD) |",
   "| --- | ---: | ---: |",
-  ...summary.models.map(
-    (model) => `| ${model.label} | ${pct(model.index)} | ${usdAmount(model.costUsd)} |`,
+  ...pipe(
+    summary.models,
+    Arr.map((model) => `| ${model.label} | ${pct(model.index)} | ${usdAmount(model.costUsd)} |`),
   ),
 ];
 
@@ -113,35 +123,54 @@ const labelLine = (stats: Summary["labeling"][number]): string =>
 const taskTable = (summary: Summary, task: (typeof TASKS)[number]): readonly string[] => [
   `### ${task.label}（${task.format}、raw は ${task.metric}）`,
   "",
-  ...summary.labeling.filter((stats) => stats.task === task.id).map((stats) => labelLine(stats)),
+  ...pipe(
+    summary.labeling,
+    Arr.filter((stats) => stats.task === task.id),
+    Arr.map((stats) => labelLine(stats)),
+  ),
   "",
   "| モデル | skill（95% 区間） | raw | 正解率 | 対の正解率（95% 区間） | coverage | p50 / p95 (ms) | タスク全体の費用 (USD) |",
   "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-  ...summary.models.flatMap((model) =>
-    model.tasks
-      .filter((result) => result.task === task.id)
-      .map((result) =>
-        [
-          "",
-          model.label,
-          `${pct(result.test.skill)}（${percentRange(result.test.skillInterval)}）`,
-          pct(result.test.raw),
-          pct(result.test.accuracy),
-          pairCell(result.test.pairs),
-          pct(result.test.coverage),
-          `${result.p50Ms} / ${result.p95Ms}`,
-          usdAmount(result.costUsd),
-          "",
-        ]
-          .join(" | ")
-          .trim(),
+  ...pipe(
+    summary.models,
+    Arr.flatMap((model) =>
+      pipe(
+        model.tasks,
+        Arr.filter((result) => result.task === task.id),
+        Arr.map((result) =>
+          Str.trim(
+            pipe(
+              [
+                "",
+                model.label,
+                `${pct(result.test.skill)}（${percentRange(result.test.skillInterval)}）`,
+                pct(result.test.raw),
+                pct(result.test.accuracy),
+                pairCell(result.test.pairs),
+                pct(result.test.coverage),
+                `${result.p50Ms} / ${result.p95Ms}`,
+                usdAmount(result.costUsd),
+                "",
+              ],
+              Arr.join(" | "),
+            ),
+          ),
+        ),
       ),
+    ),
   ),
 ];
 
 const table = (summary: Summary): string =>
-  [...indexTable(summary), ...TASKS.flatMap((task) => ["", ...taskTable(summary, task)])].join(
-    "\n",
+  pipe(
+    [
+      ...indexTable(summary),
+      ...pipe(
+        TASKS,
+        Arr.flatMap((task) => ["", ...taskTable(summary, task)]),
+      ),
+    ],
+    Arr.join("\n"),
   );
 
 const supportOf = (test: Readonly<{ failed: number; total: number }>): Support => {
@@ -160,7 +189,12 @@ const runTask = Effect.fn("runTask")(function* runTask(
     (item) => adapter.decide(item).pipe(Effect.map((outcome): Scored => ({ item, outcome }))),
     { concurrency: CONCURRENCY },
   );
-  const test = metric(rows.filter(({ item }) => item.split === "test"));
+  const test = metric(
+    pipe(
+      rows,
+      Arr.filter(({ item }) => item.split === "test"),
+    ),
+  );
   const result = {
     task: task.id,
     label: task.label,
@@ -168,7 +202,12 @@ const runTask = Effect.fn("runTask")(function* runTask(
     metric: task.metric,
     support: supportOf(test),
     test,
-    hard: metric(rows.filter(({ item }) => item.split === "hard")),
+    hard: metric(
+      pipe(
+        rows,
+        Arr.filter(({ item }) => item.split === "hard"),
+      ),
+    ),
     ...usage(rows),
   };
   return { rows, result };
@@ -180,11 +219,20 @@ const runModel = Effect.fn("runModel")(function* runModel(
 ) {
   const adapter = yield* makeOpenRouterAdapter(model.id, model.choiceVia);
   const ran = yield* Effect.forEach(tasks, (task) => runTask(adapter, task), { discard: false });
-  const results = ran.map(({ result }) => result);
+  const results = pipe(
+    ran,
+    Arr.map(({ result }) => result),
+  );
   yield* writeJson(DetailSchema, yield* benchPath("results", `${modelSlug(model.id)}.json`), {
     model: model.id,
-    outcomes: ran.flatMap(({ rows }) =>
-      rows.map(({ item, outcome }) => ({ id: item.id, outcome })),
+    outcomes: pipe(
+      ran,
+      Arr.flatMap(({ rows }) =>
+        pipe(
+          rows,
+          Arr.map(({ item, outcome }) => ({ id: item.id, outcome })),
+        ),
+      ),
     ),
   });
   return {
@@ -192,8 +240,19 @@ const runModel = Effect.fn("runModel")(function* runModel(
     model: model.id,
     label: model.label,
     choiceVia: model.choiceVia,
-    index: Num.sumAll(results.map(({ test }) => test.skill)) / results.length,
-    costUsd: Num.sumAll(results.map(({ costUsd }) => costUsd)),
+    index:
+      Num.sumAll(
+        pipe(
+          results,
+          Arr.map(({ test }) => test.skill),
+        ),
+      ) / results.length,
+    costUsd: Num.sumAll(
+      pipe(
+        results,
+        Arr.map(({ costUsd }) => costUsd),
+      ),
+    ),
     tasks: results,
   };
 });
@@ -213,8 +272,8 @@ const loadStats = Effect.fn("loadStats")(function* loadStats(task: (typeof TASKS
 
 const updateReadme = Effect.fn("updateReadme")(function* updateReadme(summary: Summary) {
   const readme = yield* benchPath("..", "..", "README.md");
-  const [head = "", rest = ""] = (yield* readText(readme)).split(START);
-  const [, tail = ""] = rest.split(END);
+  const [head, rest = ""] = pipe(yield* readText(readme), Str.split(START));
+  const [, tail = ""] = pipe(rest, Str.split(END));
   yield* writeText(readme, `${head}${START}\n\n${table(summary)}\n\n${END}${tail}`);
 });
 

@@ -1,5 +1,5 @@
 import type { TaskId } from "bench-summary/schema";
-import { Context, Effect, Schema } from "effect";
+import { Context, Effect, Schema, Array as Arr, pipe, String as Str } from "effect";
 import type { Scope } from "effect";
 
 const INDENT = 2;
@@ -33,7 +33,7 @@ const dataPath = ({
 }: Readonly<{ task: TaskId; extension: "jsonl" | "stats.json" }>): ReturnType<typeof benchPath> =>
   benchPath("data", `${task}.${extension}`);
 
-const modelSlug = (model: string): string => model.replaceAll("/", "__");
+const modelSlug = (model: string): string => pipe(model, Str.replaceAll("/", "__"));
 
 const readText = Effect.fn("readText")(function* readText(file: string) {
   const store = yield* BenchStore;
@@ -56,7 +56,11 @@ const readJsonl = Effect.fn("readJsonl")(function* readJsonl<Codec extends Schem
   const text = yield* store.readText(file);
   const decode = Schema.decodeUnknownEffect(Schema.fromJsonString(schema));
   return yield* Effect.forEach(
-    text.split("\n").filter((line) => line.trim() !== ""),
+    pipe(
+      text,
+      Str.split("\n"),
+      Arr.filter((line) => Str.trim(line) !== ""),
+    ),
     (line) => decode(line),
   );
 });
@@ -68,7 +72,14 @@ const writeJsonl = Effect.fn("writeJsonl")(function* writeJsonl<Codec extends Sc
 ) {
   const encode = Schema.encodeEffect(Schema.fromJsonString(schema));
   const lines = yield* Effect.forEach(rows, (row) => encode(row), { concurrency: "unbounded" });
-  yield* writeText(file, lines.map((line) => `${line}\n`).join(""));
+  yield* writeText(
+    file,
+    pipe(
+      lines,
+      Arr.map((line) => `${line}\n`),
+      Arr.join(""),
+    ),
+  );
 });
 
 const writeJson = Effect.fn("writeJson")(function* writeJson<Codec extends Schema.Top>(

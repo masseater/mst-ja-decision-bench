@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import { taskRoutes } from "./task-routes";
@@ -13,17 +14,20 @@ const TaskNav = (): ReactNode => (
     <Link to="/" activeOptions={EXACT} className={LINK_CLASS} activeProps={ACTIVE_PROPS}>
       {OVERVIEW}
     </Link>
-    {taskRoutes.map(({ info, params }) => (
-      <Link
-        key={info.task}
-        to="/tasks/$task"
-        params={params}
-        className={LINK_CLASS}
-        activeProps={ACTIVE_PROPS}
-      >
-        {info.label}
-      </Link>
-    ))}
+    {pipe(
+      taskRoutes,
+      Arr.map(({ info, params }) => (
+        <Link
+          key={info.task}
+          to="/tasks/$task"
+          params={params}
+          className={LINK_CLASS}
+          activeProps={ACTIVE_PROPS}
+        >
+          {info.label}
+        </Link>
+      )),
+    )}
   </nav>
 );
 

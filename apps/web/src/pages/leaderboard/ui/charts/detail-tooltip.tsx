@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema, Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 import type { TooltipContentProps } from "recharts";
 
@@ -14,7 +14,10 @@ const DetailTooltip = ({
   active,
   payload,
 }: Readonly<Pick<TooltipContentProps, "active" | "payload">>): ReactNode => {
-  const [point] = payload.map(({ payload: inner }): unknown => inner);
+  const [point] = pipe(
+    payload,
+    Arr.map(({ payload: inner }): unknown => inner),
+  );
   if (!active || !hasDetail(point)) {
     return "";
   }
@@ -22,12 +25,15 @@ const DetailTooltip = ({
   return (
     <div className="bg-popover text-popover-foreground flex min-w-56 flex-col gap-0.5 rounded-md border px-3 py-2 text-xs shadow-md">
       <p className="mb-1 text-sm font-medium">{title}</p>
-      {rows.map(({ name, value }) => (
-        <p key={name} className="flex justify-between gap-4">
-          <span className="text-muted-foreground">{name}</span>
-          <span className="tabular-nums">{value}</span>
-        </p>
-      ))}
+      {pipe(
+        rows,
+        Arr.map(({ name, value }) => (
+          <p key={name} className="flex justify-between gap-4">
+            <span className="text-muted-foreground">{name}</span>
+            <span className="tabular-nums">{value}</span>
+          </p>
+        )),
+      )}
     </div>
   );
 };

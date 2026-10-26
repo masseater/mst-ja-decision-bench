@@ -1,3 +1,4 @@
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import type { TableColumn } from "#/pages/leaderboard/model/sorting";
@@ -21,11 +22,14 @@ const SortBodyRow = <Row,>({
     <TableHead scope="row">
       <ModelName color={color} label={label} />
     </TableHead>
-    {columns.map((column) => (
-      <TableCell key={column.id} className="text-right tabular-nums">
-        {column.display(row)}
-      </TableCell>
-    ))}
+    {pipe(
+      columns,
+      Arr.map((column) => (
+        <TableCell key={column.id} className="text-right tabular-nums">
+          {column.display(row)}
+        </TableCell>
+      )),
+    )}
   </TableRow>
 );
 

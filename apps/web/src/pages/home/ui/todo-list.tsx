@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Array as Arr, pipe } from "effect";
 import type { ReactNode } from "react";
 
 import { todoQueries } from "#/pages/home/api/queries";
@@ -10,14 +11,18 @@ import { TodoItem } from "./todo-item";
 const TodoList = (): ReactNode => {
   const { data } = useSuspenseQuery(todoQueries.api.todos.get.queryOptions());
   const filter = useTodoFilter();
-  const visible = data.filter((item) => filter === "all" || item.status === filter);
+  const visible = pipe(
+    data,
+    Arr.filter((item) => filter === "all" || item.status === filter),
+  );
   return (
     <section className="flex flex-col gap-4">
       <FilterTabs />
       <ul>
-        {visible.map((item) => (
-          <TodoItem key={item.id} item={item} />
-        ))}
+        {pipe(
+          visible,
+          Arr.map((item) => <TodoItem key={item.id} item={item} />),
+        )}
       </ul>
     </section>
   );

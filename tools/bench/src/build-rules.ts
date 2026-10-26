@@ -1,11 +1,9 @@
-import { LabelStatsSchema } from "bench-summary/schema";
-import { Effect, Number as Num, Schema } from "effect";
+import { Effect, Number as Num, Schema, Array as Arr, pipe } from "effect";
 
-import { ItemSchema, NOUL_CRITERIA } from "./item.ts";
+import { NOUL_CRITERIA } from "./item.ts";
 import type { Item, NoulItem } from "./item.ts";
-import { askThrice, splitOf as splitByVotes, tally } from "./label.ts";
+import { askThrice, splitOf as splitByVotes, tally, writeLabeled } from "./label.ts";
 import { Opus, runBench } from "./runtime.ts";
-import { dataPath, writeJson, writeJsonl } from "./store.ts";
 
 const TASK = "rules";
 const PAIRS_PER_ROUND = 5;
@@ -119,13 +117,16 @@ const casesSchema = {
 };
 
 const regulationPrompt = (theme: string): string =>
-  [
-    `テーマ「${theme}」について、架空の会社の社内規程を${MIN_ARTICLES}〜${MAX_ARTICLES}条で作ってください。`,
-    "第1条は目的、第2条は用語の定義にしてください。",
-    "金額や日数の基準、例外、承認者、手続きの順序を含め、ある条が別の条を参照したり、別の条の例外を定めたりする箇所を複数入れてください。",
-    `全体で${MAX_REGULATION_CHARS}字以内にしてください。`,
-    "実在の企業名や個人名は使わないでください。",
-  ].join("\n");
+  pipe(
+    [
+      `テーマ「${theme}」について、架空の会社の社内規程を${MIN_ARTICLES}〜${MAX_ARTICLES}条で作ってください。`,
+      "第1条は目的、第2条は用語の定義にしてください。",
+      "金額や日数の基準、例外、承認者、手続きの順序を含め、ある条が別の条を参照したり、別の条の例外を定めたりする箇所を複数入れてください。",
+      `全体で${MAX_REGULATION_CHARS}字以内にしてください。`,
+      "実在の企業名や個人名は使わないでください。",
+    ],
+    Arr.join("\n"),
+  );
 
 const avoidLines = (earlier: readonly string[]): readonly string[] => {
   if (earlier.length === NO_EARLIER) {
@@ -133,28 +134,36 @@ const avoidLines = (earlier: readonly string[]): readonly string[] => {
   }
   return [
     "次の問いとは別の事例にし、同じ論点を繰り返さないでください。",
-    ...earlier.map((criterion) => `- ${criterion}`),
+    ...pipe(
+      earlier,
+      Arr.map((criterion) => `- ${criterion}`),
+    ),
   ];
 };
 
 const casesPrompt = (regulation: string, earlier: readonly string[]): string =>
-  [
-    "次の社内規程について、規程全体を読まないと判断できない事例の対と問いを作ってください。",
-    "",
-    regulation,
-    "",
-    `対を${PAIRS_PER_ROUND}組作ってください。各組は、事例が規程に適合するかを問う1つの問いと、答えが「はい」になる事例と「いいえ」になる事例の2つからなります。`,
-    "対の2つの事例はほぼ同じ文にし、金額、日付、役職、手続きの順序、例外の条件のどれか1か所だけを変えて答えが逆になるようにしてください。",
-    "どの事例も、判断に2つ以上の条を組み合わせる必要があるようにしてください。定義、例外、参照先の条を読み落とすと間違える対を半分以上含めてください。",
-    "問いは「適合しているか」のように肯定の形で書き、条番号は書かず、どの条が関係するかは読み手が規程から探すようにしてください。",
-    "実在の企業名や個人名は使わないでください。",
-    ...avoidLines(earlier),
-  ].join("\n");
+  pipe(
+    [
+      "次の社内規程について、規程全体を読まないと判断できない事例の対と問いを作ってください。",
+      "",
+      regulation,
+      "",
+      `対を${PAIRS_PER_ROUND}組作ってください。各組は、事例が規程に適合するかを問う1つの問いと、答えが「はい」になる事例と「いいえ」になる事例の2つからなります。`,
+      "対の2つの事例はほぼ同じ文にし、金額、日付、役職、手続きの順序、例外の条件のどれか1か所だけを変えて答えが逆になるようにしてください。",
+      "どの事例も、判断に2つ以上の条を組み合わせる必要があるようにしてください。定義、例外、参照先の条を読み落とすと間違える対を半分以上含めてください。",
+      "問いは「適合しているか」のように肯定の形で書き、条番号は書かず、どの条が関係するかは読み手が規程から探すようにしてください。",
+      "実在の企業名や個人名は使わないでください。",
+      ...avoidLines(earlier),
+    ],
+    Arr.join("\n"),
+  );
 
 const renderRegulation = (regulation: typeof RegulationSchema.Type): string =>
-  regulation.articles
-    .map(({ title, body }, index) => `第${index + FIRST_ARTICLE}条（${title}）${body}`)
-    .join("\n");
+  pipe(
+    regulation.articles,
+    Arr.map(({ title, body }, index) => `第${index + FIRST_ARTICLE}条（${title}）${body}`),
+    Arr.join("\n"),
+  );
 
 const generateRegulation = Effect.fn("generateRegulation")(function* generateRegulation(
   theme: string,
@@ -213,15 +222,19 @@ const generateTheme = Effect.fn("generateTheme")(function* generateTheme(
   const first = yield* generateCases(regulation, [], FIRST_ROUND);
   const second = yield* generateCases(
     regulation,
-    first.output.pairs.map(({ criterion }) => criterion),
+    pipe(
+      first.output.pairs,
+      Arr.map(({ criterion }) => criterion),
+    ),
     SECOND_ROUND,
   );
   return {
     theme,
     themeIndex,
     regulation,
-    drafts: [...first.output.pairs, ...second.output.pairs].flatMap((pair, index) =>
-      toDrafts(pair, index),
+    drafts: pipe(
+      [...first.output.pairs, ...second.output.pairs],
+      Arr.flatMap((pair, index) => toDrafts(pair, index)),
     ),
     costUsd: costUsd + first.costUsd + second.costUsd,
   };
@@ -264,17 +277,24 @@ runBench(
     const generated = yield* Effect.forEach(THEMES, generateTheme, {
       concurrency: CONCURRENCY,
     });
-    const drafts = generated.flatMap(({ theme, themeIndex, regulation, drafts: themeDrafts }) =>
-      themeDrafts.map((draft) => ({ theme, themeIndex, regulation, ...draft })),
+    const drafts = pipe(
+      generated,
+      Arr.flatMap(({ theme, themeIndex, regulation, drafts: themeDrafts }) =>
+        pipe(
+          themeDrafts,
+          Arr.map((draft) => ({ theme, themeIndex, regulation, ...draft })),
+        ),
+      ),
     );
     const labeled = yield* Effect.forEach(drafts, labelDraft, { concurrency: CONCURRENCY });
-    const items = labeled.map(({ item }) => item);
-    yield* writeJsonl(ItemSchema, yield* dataPath({ task: TASK, extension: "jsonl" }), items);
-    yield* writeJson(LabelStatsSchema, yield* dataPath({ task: TASK, extension: "stats.json" }), {
-      task: TASK,
-      items: items.length,
-      hard: items.filter(({ split }) => split === "hard").length,
-      opusCostUsd: Num.sumAll([...generated, ...labeled].map(({ costUsd }) => costUsd)),
-    });
+    const items = pipe(
+      labeled,
+      Arr.map(({ item }) => item),
+    );
+    const costs = pipe(
+      [...generated, ...labeled],
+      Arr.map(({ costUsd }) => costUsd),
+    );
+    yield* writeLabeled(TASK, items, { opusCostUsd: Num.sumAll(costs) });
   }),
 );

@@ -10,6 +10,8 @@ import {
   Path,
   Schema,
   Stream,
+  String as Str,
+  pipe,
 } from "effect";
 import type { Scope } from "effect";
 import { Hex } from "effect/encoding";
@@ -152,7 +154,9 @@ const runClaude = Effect.fn("runClaude")(function* runClaude(request: Prompt) {
     { concurrency: "unbounded" },
   );
   return yield* Schema.decodeEffect(Schema.fromJsonString(ClaudeResultSchema))(stdout).pipe(
-    Effect.catchCause(() => Effect.die(`${stdout}${stderr}`.slice(REASON_START, REASON_LENGTH))),
+    Effect.catchCause(() =>
+      Effect.die(pipe(`${stdout}${stderr}`, Str.slice(REASON_START, REASON_LENGTH))),
+    ),
   );
 }, Effect.scoped);
 
