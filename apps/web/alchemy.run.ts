@@ -1,5 +1,6 @@
 import { Stack, makeRandom } from "alchemy";
 import { D1, Rules, Ruleset, Website, Workers, providers, state } from "alchemy/Cloudflare";
+import { Build } from "alchemy/Command";
 import type { InferEnv } from "alchemy/Cloudflare";
 import { Config, Effect, Option, Schema } from "effect";
 
@@ -35,6 +36,21 @@ const web = Effect.gen(function* web() {
       traces: { enabled: true, headSamplingRate: TRACE_SAMPLING_RATE, persist: true },
     },
     viteEnvironments: { entry: "ssr", children: ["rsc"] },
+  });
+});
+
+const site = Effect.gen(function* site() {
+  const build = yield* Build("WebBuild", { command: "vp build", outdir: "dist/client", memo: false });
+  return yield* Workers.Worker("Web", {
+    compatibility: COMPATIBILITY,
+    logpush: true,
+    domain: LEGACY_HOST,
+    routes: [{ pattern: `${ZONE}${BASE_PATH}*`, zoneName: ZONE }],
+    assets: {
+      directory: build.outdir,
+      base: BASE_PATH,
+      htmlHandling: "auto-trailing-slash",
+    },
   });
 });
 
@@ -92,7 +108,7 @@ export default Stack(
   APP_NAME,
   { providers: providers(), state: state() },
   Effect.gen(function* stack() {
-    const { url } = yield* web;
+    const { url } = yield* site;
     yield* legacyHostRedirect;
     yield* Option.match(OWNED_ZONE, {
       onNone: () => Effect.void,
