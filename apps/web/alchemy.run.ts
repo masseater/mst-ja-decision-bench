@@ -5,6 +5,7 @@ import { Build } from "alchemy/Command";
 import { Config, Effect, Option, Schema } from "effect";
 
 import { APP_NAME, CI_TELEMETRY_AUDIENCE, ENV_PREFIX, requireAppPrefix } from "./app-name.ts";
+import { ASSET_HEADERS } from "./asset-headers.ts";
 import { BASE_PATH } from "./base-path.ts";
 import { edgeGuard } from "./edge-guard.ts";
 
@@ -31,6 +32,7 @@ const site = Effect.gen(function* site() {
       directory: build.outdir,
       base: BASE_PATH,
       htmlHandling: "auto-trailing-slash",
+      headers: ASSET_HEADERS,
     },
   });
 });
