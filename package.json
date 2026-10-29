@@ -29,7 +29,6 @@
     "effect": "catalog:stack",
     "eslint": "catalog:",
     "eslint-plugin-baseline-js": "catalog:",
-    "eslint-plugin-drizzle": "catalog:",
     "eslint-plugin-no-comments": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "fallow": "catalog:stack",
@@ -59,7 +58,6 @@
     "skills": [
       "@tanstack/devtools-vite",
       "@tanstack/react-start",
-      "drizzle-kit",
       "@tanstack/devtools",
       "@tanstack/devtools-event-client",
       "@tanstack/match-sorter-utils",

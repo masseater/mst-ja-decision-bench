@@ -53,7 +53,6 @@ export default defineConfig({
       { name: "vite-plus", specifier: "vite-plus/oxlint-plugin" },
       { name: "tanstack-query", specifier: "@tanstack/eslint-plugin-query" },
       { name: "tanstack-router", specifier: "@tanstack/eslint-plugin-router" },
-      { name: "drizzle", specifier: "eslint-plugin-drizzle" },
       { name: "react-hooks-js", specifier: "eslint-plugin-react-hooks" },
       { name: "@eslint-react", specifier: "@eslint-react/eslint-plugin" },
       { name: "shadcn", specifier: "@shadcn/lint" },
@@ -67,8 +66,6 @@ export default defineConfig({
       "no-comments/disallowComments": ["error", { allow: ["oxlint-disable", "eslint-disable"] }],
       ...allRulesOf({ prefix: "tanstack-query", rules: tanstackQuery.rules }),
       ...allRulesOf({ prefix: "tanstack-router", rules: tanstackRouter.rules }),
-      "drizzle/enforce-delete-with-where": "error",
-      "drizzle/enforce-update-with-where": "error",
       ...allRulesOf({ prefix: "shadcn", rules: shadcn.rules }),
       "shadcn/no-restyle": [
         "error",
@@ -218,7 +215,6 @@ export default defineConfig({
           "renovate",
           "actions-lint",
           "steiger-all",
-          "db-check-all",
           "fallow-all",
           "gitleaks",
           "audit",
@@ -228,7 +224,6 @@ export default defineConfig({
       eslint: "NODE_OPTIONS=--max-old-space-size=4096 eslint --max-warnings 0 .",
       syncpack: "syncpack lint",
       "steiger-all": "vp run -r steiger",
-      "db-check-all": "vp run -r db:check",
       "fallow-all": "vp run -r fallow",
       audit: {
         command: "vp pm audit",

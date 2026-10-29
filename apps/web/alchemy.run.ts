@@ -1,5 +1,5 @@
-import { Stack, makeRandom } from "alchemy";
-import { D1, Rules, Ruleset, Website, Workers, providers, state } from "alchemy/Cloudflare";
+import { Stack } from "alchemy";
+import { Rules, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
 import { Build } from "alchemy/Command";
 import type { InferEnv } from "alchemy/Cloudflare";
 import { Config, Effect, Option, Schema } from "effect";
@@ -8,7 +8,6 @@ import { APP_NAME, CI_TELEMETRY_AUDIENCE, ENV_PREFIX, requireAppPrefix } from ".
 import { BASE_PATH } from "./base-path.ts";
 import { edgeGuard } from "./edge-guard.ts";
 
-const TRACE_SAMPLING_RATE = 0.1;
 const ZONE = "masseater.dev";
 const LEGACY_HOST = "mst-ja-decision-bench.masseater.dev";
 const LEGACY_REDIRECT_LIST = `${ENV_PREFIX}legacy_host`;
@@ -16,28 +15,6 @@ const LEGACY_REDIRECT_LIST = `${ENV_PREFIX}legacy_host`;
 const COMPATIBILITY = { date: "2026-08-25" } as const;
 
 const OWNED_ZONE = Option.none<string>();
-
-const web = Effect.gen(function* web() {
-  const DB = yield* D1.Database("DB", { migrations: "./drizzle" });
-  const BETTER_AUTH_SECRET = yield* makeRandom("BetterAuthSecret");
-  return yield* Website.Vite("Web", {
-    compatibility: COMPATIBILITY,
-    logpush: true,
-    domain: LEGACY_HOST,
-    routes: [{ pattern: `${ZONE}${BASE_PATH}*`, zoneName: ZONE }],
-    env: { BETTER_AUTH_SECRET, DB },
-    observability: {
-      enabled: true,
-      logs: {
-        enabled: true,
-        invocationLogs: true,
-        persist: true,
-      },
-      traces: { enabled: true, headSamplingRate: TRACE_SAMPLING_RATE, persist: true },
-    },
-    viteEnvironments: { entry: "ssr", children: ["rsc"] },
-  });
-});
 
 const site = Effect.gen(function* site() {
   const build = yield* Build("WebBuild", { command: "vp build", outdir: "dist/client", memo: false });
@@ -100,10 +77,9 @@ const ciTelemetry = Effect.gen(function* ciTelemetry() {
   });
 });
 
-type WebEnv = InferEnv<typeof web>;
 type CiTelemetryEnv = InferEnv<typeof ciTelemetry>;
 
-export type { CiTelemetryEnv, WebEnv };
+export type { CiTelemetryEnv };
 export default Stack(
   APP_NAME,
   { providers: providers(), state: state() },
