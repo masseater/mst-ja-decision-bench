@@ -19,7 +19,11 @@ export default defineConfig({
   plugins: [
     devtools(),
     tailwindcss(),
-    tanstackStart({ srcDirectory: "src/app", rsc: { enabled: true } }),
+    tanstackStart({
+      srcDirectory: "src/app",
+      rsc: { enabled: true },
+      prerender: { enabled: true, crawlLinks: true, failOnError: true },
+    }),
     rsc(),
     viteReact(),
   ],
