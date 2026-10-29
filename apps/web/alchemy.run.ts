@@ -1,7 +1,7 @@
 import { Stack } from "alchemy";
 import { Rules, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
-import { Build } from "alchemy/Command";
 import type { InferEnv } from "alchemy/Cloudflare";
+import { Build } from "alchemy/Command";
 import { Config, Effect, Option, Schema } from "effect";
 
 import { APP_NAME, CI_TELEMETRY_AUDIENCE, ENV_PREFIX, requireAppPrefix } from "./app-name.ts";
@@ -17,7 +17,11 @@ const COMPATIBILITY = { date: "2026-08-25" } as const;
 const OWNED_ZONE = Option.none<string>();
 
 const site = Effect.gen(function* site() {
-  const build = yield* Build("WebBuild", { command: "vp build", outdir: "dist/client", memo: false });
+  const build = yield* Build("WebBuild", {
+    command: "vp build",
+    outdir: "dist/client",
+    memo: false,
+  });
   return yield* Workers.Worker("Web", {
     compatibility: COMPATIBILITY,
     logpush: true,

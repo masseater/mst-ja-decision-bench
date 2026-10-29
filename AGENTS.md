@@ -48,7 +48,7 @@ release. Add a tool name to select part of the graph. For example, run
 
 - `tools/bench` は `data/` の JSONL を読み、OpenRouter の応答を `cache/` に、モデルごとの結果を `results/` に保存する。どちらもコミットするので、再実行は成功済みの判定を呼び直さない。
 - `vp run bench` は README の `results:start`〜`results:end` の表と `libs/bench-summary/summary.json` を書き換える。`apps/web` はこの JSON を読んでリーダーボードを出す。
-- `apps/web` は `masseater.dev` ゾーンの `/decision-bench` に Worker のルートで載る。ゾーンは masseater/masseater.dev が持つので、`OWNED_ZONE` は `Option.none()` のままにする。
+- `apps/web` は全ページをプリレンダーし、スクリプトの無い Worker（`Command.Build` と `Workers.Worker` の `assets`）で `masseater.dev` ゾーンの `/decision-bench` に載る。サーバーの処理は置かない。ゾーンは masseater/masseater.dev が持つので、`OWNED_ZONE` は `Option.none()` のままにする。
 - 背景や遷移の部品は masseater/masseater.dev の `libs/ui`（`@masseater.dev/ui`）を git の subpath 依存で読む。lockfile が main のコミットを固定するので、新しい版は `vp update @masseater.dev/ui` で取り込む。色のトークンは @shadcn/lint が読めるよう `apps/web/src/app/styles.css` に置く。
 
 ## 環境変数
