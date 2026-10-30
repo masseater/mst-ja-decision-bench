@@ -1,5 +1,5 @@
 import { Stack } from "alchemy";
-import { Rules, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
+import { Rules, Rum, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
 import type { InferEnv } from "alchemy/Cloudflare";
 import { Build } from "alchemy/Command";
 import { Config, Effect, Option, Schema } from "effect";
@@ -18,8 +18,10 @@ const COMPATIBILITY = { date: "2026-08-25" } as const;
 const OWNED_ZONE = Option.none<string>();
 
 const site = Effect.gen(function* site() {
+  const { siteToken } = yield* Rum.Site("WebAnalytics", { host: ZONE });
   const build = yield* Build("WebBuild", {
     command: "vp build",
+    env: { VITE_CF_BEACON_TOKEN: siteToken },
     outdir: "dist/client",
     memo: false,
   });
