@@ -14,12 +14,14 @@ const LEGACY_HOST = "mst-ja-decision-bench.masseater.dev";
 const LEGACY_REDIRECT_LIST = `${ENV_PREFIX}legacy_host`;
 
 const COMPATIBILITY = { date: "2026-08-25" } as const;
+const CF_BEACON_TOKEN = "021b4961f3fd419297b186136a5a8a0a";
 
 const OWNED_ZONE = Option.none<string>();
 
 const site = Effect.gen(function* site() {
   const build = yield* Build("WebBuild", {
     command: "vp build",
+    env: { VITE_CF_BEACON_TOKEN: CF_BEACON_TOKEN },
     outdir: "dist/client",
     memo: false,
   });
