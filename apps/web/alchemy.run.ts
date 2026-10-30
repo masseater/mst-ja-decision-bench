@@ -1,5 +1,5 @@
 import { Stack } from "alchemy";
-import { Rules, Rum, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
+import { Rules, Ruleset, Workers, providers, state } from "alchemy/Cloudflare";
 import type { InferEnv } from "alchemy/Cloudflare";
 import { Build } from "alchemy/Command";
 import { Config, Effect, Option, Schema } from "effect";
@@ -14,14 +14,14 @@ const LEGACY_HOST = "mst-ja-decision-bench.masseater.dev";
 const LEGACY_REDIRECT_LIST = `${ENV_PREFIX}legacy_host`;
 
 const COMPATIBILITY = { date: "2026-08-25" } as const;
+const CF_BEACON_TOKEN = "021b4961f3fd419297b186136a5a8a0a";
 
 const OWNED_ZONE = Option.none<string>();
 
 const site = Effect.gen(function* site() {
-  const { siteToken } = yield* Rum.Site("WebAnalytics", { host: ZONE });
   const build = yield* Build("WebBuild", {
     command: "vp build",
-    env: { VITE_CF_BEACON_TOKEN: siteToken },
+    env: { VITE_CF_BEACON_TOKEN: CF_BEACON_TOKEN },
     outdir: "dist/client",
     memo: false,
   });

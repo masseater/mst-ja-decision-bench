@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Cloudflare Web Analytics のサイトトークンはビーコンとして HTML に出る公開値"
+regexTarget = "line"
+regexes = ['''\bCF_BEACON_TOKEN = "[0-9a-f]{32}"''']
