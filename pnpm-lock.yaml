@@ -344,7 +344,7 @@ overrides:
   glob@>=9.0.0 <=14.0.1: ^14.0.2
   minimatch@<11.0.1: ^11.0.1
 
-packageExtensionsChecksum: sha256-+VMdP1PtirSQ7Lhy8zZaF5Ha03FJIIM31JqoRyxSKXQ=
+packageExtensionsChecksum: sha256-UoeDPdVJlHAcCJ2gi51cFcqdMlCrOXaY2vq0XL5Rcuw=
 
 patchedDependencies:
   '@tanstack/eslint-plugin-start@0.1.0': 364cc40b73326fe59c5d685ac247690de2302e3e731b7b7d37583701f9370644
@@ -467,7 +467,7 @@ importers:
         version: 4.0.2(effect@4.0.2)(react@19.3.0)(scheduler@0.28.0)
       '@masseater.dev/ui':
         specifier: github:masseater/masseater.dev#path:/libs/ui
-        version: https://codeload.github.com/masseater/masseater.dev/tar.gz/75aa7ee92b61ab2f9ce6ced2ac6f59f0e3146de0#path:/libs/ui(@types/react@19.3.0)(effect@4.0.2)(react@19.3.0)(tailwindcss@4.3.3)
+        version: https://codeload.github.com/masseater/masseater.dev/tar.gz/fa779bb6c502068352e127e120213031534cc9e9#path:/libs/ui(@types/react@19.3.0)(effect@4.0.2)(react@19.3.0)(tailwindcss@4.3.3)
       '@tanstack/react-devtools':
         specifier: 0.10.13
         version: 0.10.13(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(csstype@3.2.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(solid-js@1.9.15)
@@ -2084,8 +2084,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@masseater.dev/ui@https://codeload.github.com/masseater/masseater.dev/tar.gz/75aa7ee92b61ab2f9ce6ced2ac6f59f0e3146de0#path:/libs/ui':
-    resolution: {gitHosted: true, integrity: sha512-/o4PS9GVGv9rPLdCFkH06QKvCGkiOL8amlLfv+x5Kfd7ewGFgoG1/lZAQ7A5dbHh8HC3tlF8mZhgWEvUI81ZBw==, path: /libs/ui, tarball: https://codeload.github.com/masseater/masseater.dev/tar.gz/75aa7ee92b61ab2f9ce6ced2ac6f59f0e3146de0}
+  '@masseater.dev/ui@https://codeload.github.com/masseater/masseater.dev/tar.gz/fa779bb6c502068352e127e120213031534cc9e9#path:/libs/ui':
+    resolution: {gitHosted: true, integrity: sha512-svFNjzv216mhrIQ8QwY/lhHS1/GszFubMofoAm/GOCqXgi8zHbfGafYQ0pfFbifWs4NDVKSkJNh3C3/qGhUs+w==, path: /libs/ui, tarball: https://codeload.github.com/masseater/masseater.dev/tar.gz/fa779bb6c502068352e127e120213031534cc9e9}
     version: 0.0.0
     peerDependencies:
       effect: 4.0.2
@@ -11269,7 +11269,7 @@ snapshots:
   '@libsql/win32-x64-msvc@0.5.29':
     optional: true
 
-  '@masseater.dev/ui@https://codeload.github.com/masseater/masseater.dev/tar.gz/75aa7ee92b61ab2f9ce6ced2ac6f59f0e3146de0#path:/libs/ui(@types/react@19.3.0)(effect@4.0.2)(react@19.3.0)(tailwindcss@4.3.3)':
+  '@masseater.dev/ui@https://codeload.github.com/masseater/masseater.dev/tar.gz/fa779bb6c502068352e127e120213031534cc9e9#path:/libs/ui(@types/react@19.3.0)(effect@4.0.2)(react@19.3.0)(tailwindcss@4.3.3)':
     dependencies:
       '@fontsource-variable/roboto-flex': 5.3.0
       '@paper-design/shaders-react': 0.0.82(@types/react@19.3.0)(react@19.3.0)
