@@ -143,14 +143,14 @@
     },
     "how-to-use-react": {
       "source": "masseater/skills",
-      "ref": "cba419f98284a6aa1d8dc8e9a8dbddc16d5504ed",
+      "ref": "c65c6bebdf22be85404b0798dcbcb89cfea49d10",
       "sourceType": "github",
       "skillPath": "skills/how-to-use-react/SKILL.md",
       "computedHash": "20d34daf5ebe6ec894d1fe77f2e22a0feb48ca5868d3d7e34b69864f1e5f1400"
     },
     "integrate": {
       "source": "masseater/skills",
-      "ref": "cba419f98284a6aa1d8dc8e9a8dbddc16d5504ed",
+      "ref": "c65c6bebdf22be85404b0798dcbcb89cfea49d10",
       "sourceType": "github",
       "skillPath": "skills/integrate/SKILL.md",
       "computedHash": "1f5780111b975a95c82d2856cd21ddeae4a88a1da518837d42012114d932bf70"
@@ -192,7 +192,7 @@
     },
     "measure-dont-guess": {
       "source": "masseater/skills",
-      "ref": "cba419f98284a6aa1d8dc8e9a8dbddc16d5504ed",
+      "ref": "c65c6bebdf22be85404b0798dcbcb89cfea49d10",
       "sourceType": "github",
       "skillPath": "skills/measure-dont-guess/SKILL.md",
       "computedHash": "c49f32ddadde337b7bc16dcd485ed249cda767d67fe63377ce08839ef6db94ec"
@@ -206,7 +206,7 @@
     },
     "project-checklist": {
       "source": "masseater/skills",
-      "ref": "0d9fc5e4f12147c7b2955c1a7b480e0c602ef865",
+      "ref": "c65c6bebdf22be85404b0798dcbcb89cfea49d10",
       "sourceType": "github",
       "skillPath": "skills/project-checklist/SKILL.md",
       "computedHash": "16b31583521b66890ddad0060ecb47056475660eff97c3662fb292302e8b4130"
@@ -227,7 +227,7 @@
     },
     "skill-authoring": {
       "source": "masseater/skills",
-      "ref": "cba419f98284a6aa1d8dc8e9a8dbddc16d5504ed",
+      "ref": "c65c6bebdf22be85404b0798dcbcb89cfea49d10",
       "sourceType": "github",
       "skillPath": "skills/skill-authoring/SKILL.md",
       "computedHash": "df95cc1e67fb95b86ba4348495ca7a4db81296e397460604b764bf3e9afe963b"
