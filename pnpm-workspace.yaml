@@ -27,8 +27,8 @@ catalog:
   eslint-plugin-no-comments: 1.2.1
   eslint-plugin-baseline-js: 0.7.4
   "@html-eslint/eslint-plugin-react": 0.66.1
-  "@commitlint/cli": 21.2.3
-  "@commitlint/config-conventional": 21.2.3
+  "@commitlint/cli": 21.2.4
+  "@commitlint/config-conventional": 21.2.4
   "@tanstack/react-query-devtools": 5.104.1
   "@vitejs/plugin-react": 6.1.2
   "@vitejs/plugin-rsc": 0.5.36
