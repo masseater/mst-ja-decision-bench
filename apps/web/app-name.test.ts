@@ -1,6 +1,6 @@
+import { D1, Rules, Zone } from "@alchemy.run/cloudflare";
+import { App, Secret } from "@alchemy.run/fly";
 import { Stack } from "alchemy";
-import { D1, Rules, Zone } from "alchemy/Cloudflare";
-import { App, Secret } from "alchemy/Fly";
 import { Stage } from "alchemy/Stage";
 import { inMemoryState } from "alchemy/State";
 import { Effect, Exit, Layer, Match, Redacted, String as Str, pipe } from "effect";

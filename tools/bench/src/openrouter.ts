@@ -1,7 +1,6 @@
 import { OpenRouter } from "@openrouter/sdk";
 import { HTTPClient } from "@openrouter/sdk/lib/http.js";
 import type { DecisionsRequest, DecisionsResponse } from "@openrouter/sdk/models";
-import { isUnknown } from "@openrouter/sdk/types/discriminatedUnion.js";
 import { isSplitChoice } from "bench-summary/schema";
 import type { ChoiceVia } from "bench-summary/schema";
 import {
@@ -69,14 +68,17 @@ const attribution = contextOf.pipe(
   })),
 );
 
-type Answers = Readonly<DecisionsResponse["answers"]>;
+type Frozen<Value> = Value extends object
+  ? { readonly [Key in keyof Value]: Frozen<Value[Key]> }
+  : Value;
+type Answers = Frozen<DecisionsResponse["answers"]>;
 type Answer = Answers[string];
 
 const decodeKnown = (answer: Answer): Option.Option<Decision> => {
-  if (isUnknown<"type">(answer)) {
-    return Option.none();
+  if (answer.type === "choice" || answer.type === "noul" || answer.type === "score") {
+    return Schema.decodeOption(DecisionSchema)(answer);
   }
-  return Schema.decodeOption(DecisionSchema)(answer);
+  return Option.none();
 };
 
 const decodeAnswer = (answer: Answer | undefined): Option.Option<Decision> =>

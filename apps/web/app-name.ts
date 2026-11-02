@@ -1,6 +1,6 @@
+import { Rules, Zone } from "@alchemy.run/cloudflare";
+import { Secret } from "@alchemy.run/fly";
 import { Stack, isResourceOfType } from "alchemy";
-import { Rules, Zone } from "alchemy/Cloudflare";
-import { Secret } from "alchemy/Fly";
 import {
   Array as Arr,
   Effect,
