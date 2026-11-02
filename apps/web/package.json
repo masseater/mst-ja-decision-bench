@@ -44,7 +44,7 @@
     "@effect/tsgo": "catalog:stack",
     "@feature-sliced/steiger-plugin": "0.8.0",
     "@tailwindcss/vite": "4.3.3",
-    "@tanstack/devtools-vite": "0.8.5",
+    "@tanstack/devtools-vite": "0.8.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "catalog:",
