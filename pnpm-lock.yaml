@@ -536,8 +536,8 @@ importers:
         specifier: catalog:stack
         version: 0.56.0
       '@feature-sliced/steiger-plugin':
-        specifier: 0.8.0
-        version: 0.8.0(typescript@7.0.2)(vitest@5.0.5)
+        specifier: 0.8.1
+        version: 0.8.1(typescript@7.0.2)(vitest@5.0.5)
       '@tailwindcss/vite':
         specifier: 4.3.3
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.3.0(@types/node@26.6.4)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.1))
@@ -1718,6 +1718,9 @@ packages:
 
   '@feature-sliced/steiger-plugin@0.8.0':
     resolution: {integrity: sha512-wACwEYLVxs6bziUDaZXlp6k43dantdU5MSBtO48MwonwrupdzYcLhs6+Ps9YoWDINccaAlqiMxlHmgLJubK5Ow==}
+
+  '@feature-sliced/steiger-plugin@0.8.1':
+    resolution: {integrity: sha512-hnRmnpGT7HoOv3Hy+et1xFq1IsCogp0SEfLlEC73kI74nlm0zQl8q1QN78iG0PEXyLZUAsqJIfG8rZHvva5vEg==}
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -10906,6 +10909,18 @@ snapshots:
       '@steiger/toolkit': 0.2.3(vitest@5.0.5)
       fastest-levenshtein: 1.0.16
       lodash-es: 4.18.1
+      pluralize: 8.0.0
+      tsconfck: 3.1.6(typescript@7.0.2)
+      web-tree-sitter: 0.26.13
+    transitivePeerDependencies:
+      - typescript
+      - vitest
+
+  '@feature-sliced/steiger-plugin@0.8.1(typescript@7.0.2)(vitest@5.0.5)':
+    dependencies:
+      '@feature-sliced/filesystem': 3.1.1
+      '@steiger/toolkit': 0.2.3(vitest@5.0.5)
+      fastest-levenshtein: 1.0.16
       pluralize: 8.0.0
       tsconfck: 3.1.6(typescript@7.0.2)
       web-tree-sitter: 0.26.13
