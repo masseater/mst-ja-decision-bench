@@ -90,6 +90,7 @@ packageExtensions:
 minimumReleaseAgeExclude:
   - "@r_masseater/oxlint-typed-rules@0.0.1"
   - "@r_masseater/oxlint-plugin-decision@0.0.4"
-auditConfig:
-  ignoreGhsas:
+audit:
+  ignorePrune: true
+  ignore:
     - GHSA-gcqx-w48m-w2h4
