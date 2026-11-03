@@ -59,7 +59,7 @@ catalogs:
     steiger: 0.8.1
     tailwindcss: 4.3.3
     textlint: 15.8.0
-    typescript: 7.1.0-beta
+    typescript: 7.1.0-dev.20261030.1
     vite-plus: 1.4.0
 overrides:
   effect: "catalog:stack"
