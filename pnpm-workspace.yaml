@@ -93,6 +93,7 @@ patchedDependencies:
   "@tanstack/eslint-plugin-start@0.1.0": patches/@tanstack__eslint-plugin-start@0.1.0.patch
 minimumReleaseAgeExclude:
   - "@r_masseater/oxlint-plugin-decision@0.0.4"
-auditConfig:
-  ignoreGhsas:
+audit:
+  ignorePrune: true
+  ignore:
     - GHSA-gcqx-w48m-w2h4
