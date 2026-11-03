@@ -53,16 +53,20 @@ export default defineConfig({
       { name: "vite-plus", specifier: "vite-plus/oxlint-plugin" },
       { name: "tanstack-query", specifier: "@tanstack/eslint-plugin-query" },
       { name: "tanstack-router", specifier: "@tanstack/eslint-plugin-router" },
+      { name: "tanstack-start", specifier: "@r_masseater/oxlint-typed-rules/tanstack-start" },
       { name: "react-hooks-js", specifier: "eslint-plugin-react-hooks" },
       { name: "@eslint-react", specifier: "@eslint-react/eslint-plugin" },
       { name: "shadcn", specifier: "@shadcn/lint" },
       { name: "no-comments", specifier: "eslint-plugin-no-comments" },
       { name: "baseline-js", specifier: "eslint-plugin-baseline-js" },
       { name: "@html-eslint/react", specifier: "@html-eslint/eslint-plugin-react" },
+      { name: "eslint-js", specifier: "oxlint-plugin-eslint" },
       { name: decisionPluginName, specifier: "./decision-rules.ts" },
     ],
     rules: {
       "vite-plus/prefer-vite-plus-imports": "error",
+      "tanstack-start/no-async-client-component": "error",
+      "tanstack-start/no-client-code-in-server-component": "error",
       "no-comments/disallowComments": ["error", { allow: ["oxlint-disable", "eslint-disable"] }],
       ...allRulesOf({ prefix: "tanstack-query", rules: tanstackQuery.rules }),
       ...allRulesOf({ prefix: "tanstack-router", rules: tanstackRouter.rules }),
@@ -147,6 +151,30 @@ export default defineConfig({
     },
     overrides: [
       {
+        files: ["**/alchemy.run.ts"],
+        rules: {
+          "eslint-js/no-restricted-syntax": [
+            "error",
+            {
+              selector: 'CallExpression[callee.name="Stack"]:not([arguments.0.name="APP_NAME"])',
+              message: "スタック名には app-name.ts の APP_NAME を渡す",
+            },
+            {
+              selector:
+                'Program:not(:has(YieldExpression[delegate=true] > Identifier.argument[name="requireAppPrefix"]))',
+              message:
+                "スタックの最後で app-name.ts の requireAppPrefix を yield* して、リソース名の prefix を検査する",
+            },
+            {
+              selector:
+                'CallExpression[callee.name="Stack"] > .arguments:nth-child(3):not(:has(FunctionExpression > BlockStatement > ExpressionStatement:nth-last-child(2) > YieldExpression[delegate=true] > Identifier.argument[name="requireAppPrefix"]))',
+              message:
+                "スタックの最後で app-name.ts の requireAppPrefix を yield* して、リソース名の prefix を検査する",
+            },
+          ],
+        },
+      },
+      {
         files: ["**/*.config.ts", "**/alchemy.run.ts", "**/*.worker.ts", "decision-rules.ts"],
         rules: { "import/no-default-export": "off" },
       },
@@ -208,7 +236,6 @@ export default defineConfig({
         },
         dependsOn: [
           "test-all",
-          "eslint",
           "syncpack",
           "markdown-lint",
           "renovate",
@@ -220,7 +247,6 @@ export default defineConfig({
         ],
       },
       "test-all": "vp run -r test",
-      eslint: "NODE_OPTIONS=--max-old-space-size=4096 eslint --max-warnings 0 .",
       syncpack: "syncpack lint",
       "steiger-all": "vp run -r steiger",
       "fallow-all": "vp run -r fallow",
