@@ -16,6 +16,10 @@
       ],
       "groupName": "effect and alchemy",
       "automerge": false
+    },
+    {
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "!/-dev\\./"
     }
   ],
   "customManagers": [
